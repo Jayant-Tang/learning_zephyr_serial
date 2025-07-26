@@ -1,0 +1,13 @@
+/{
+    aliases {
+        my-usb-serial = &usb_serial0;
+    };
+};
+
+&zephyr_udc0 {
+    status = "okay";
+	usb_serial0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+        status = "okay";
+	};
+};

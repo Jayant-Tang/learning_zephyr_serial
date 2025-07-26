@@ -13,8 +13,21 @@ LOG_MODULE_REGISTER(app_uart, CONFIG_APP_UART_LOG_LEVEL);
 #define RX_INACTIVE_TIMEOUT_US 1000000
 
 /* serial device */ 
+#if (IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER) && IS_ENABLED(CONFIG_USB_CDC_ACM))
+
+#include <zephyr/usb/usb_device.h>
+#include <uart_async_adapter.h>
+
+#define USB_UART_INST DT_ALIAS(my_usb_serial)
+static const struct device *uart_dev = DEVICE_DT_GET(USB_UART_INST);
+UART_ASYNC_ADAPTER_INST_DEFINE(async_adapter);
+
+#else 
+
 #define UART_INST DT_ALIAS(learning_serial)
-static const struct device *uart_dev = DEVICE_DT_GET(UART_INST);
+static struct device *uart_dev = DEVICE_DT_GET(UART_INST);
+
+#endif /* CONFIG_UART_ASYNC_ADAPTER */
 
 /* uart rx memory pool for DMA */
 #define BUF_SIZE CONFIG_APP_UART_RX_DMA_BLOCK_SIZE
@@ -208,6 +221,21 @@ static int app_uart_init(void)
         LOG_ERR("device %s is not ready; exiting", uart_dev->name);
         return -ENODEV;
     }
+
+#if IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER) && IS_ENABLED(CONFIG_USB_CDC_ACM)
+
+
+    err = usb_enable(NULL);
+    if (err && (err != -EALREADY)) {
+        printk("Failed to enable USB\n");
+        return -ENODEV;
+    }
+
+    /* Implement API adapter */
+    uart_async_adapter_init(async_adapter, uart_dev);
+    uart_dev = async_adapter;
+
+#endif
 
 	err = uart_callback_set(uart_dev, uart_callback, (void *)uart_dev);
 	__ASSERT(err == 0, "Failed to set callback");
