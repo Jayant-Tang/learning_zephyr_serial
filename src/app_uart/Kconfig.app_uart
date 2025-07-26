@@ -1,0 +1,39 @@
+module = APP_UART
+module-str = app-uart
+source "subsys/logging/Kconfig.template.log_config"
+
+config APP_UART_TX_THREAD_PRIORITY
+    int "Thread priority"
+    default 8
+    help
+      Priority of the application UART thread.
+
+config APP_UART_RX_THREAD_PRIORITY
+    int "RX thread priority"
+    default 7
+    help
+      Priority of the application UART RX thread.
+
+config APP_UART_RX_DMA_BLOCK_SIZE
+    int "RX DMA block size"
+    default 64
+    help
+      Size of the DMA block for receiving data.
+
+config APP_UART_RX_DMA_BLOCK_NUMBER
+    int "RX DMA block number"
+    default 4
+    help
+      Number of DMA blocks for receiving data.
+
+config APP_UART_TX_THREAD_STACK_SIZE
+    int "Thread stack size"
+    default 1024
+    help
+      Size of the stack for the application UART thread.
+
+config APP_UART_RX_THREAD_STACK_SIZE
+    int "RX thread stack size"
+    default 2048
+    help
+      Size of the stack for the application UART RX thread. 

@@ -1,0 +1,14 @@
+source "Kconfig.zephyr"
+
+menu "Zephyr Application UART Configuration"
+rsource "src/app_uart/Kconfig.app_uart"
+endmenu
+
+menu "Application Configuration"
+module = APP
+module-str = app
+source "subsys/logging/Kconfig.template.log_config"
+endmenu
+
+
+

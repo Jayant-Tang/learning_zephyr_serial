@@ -1,0 +1,15 @@
+/{
+    aliases{
+        learning-serial = &uart20;
+    };
+};
+
+
+&uart20 {
+    status = "okay";
+};
+
+// &dppic20
+// {
+//     status = "okay";
+// };
