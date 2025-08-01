@@ -1,5 +1,5 @@
 /{
-    aliases{
+    aliases {
         learning-serial = &uart20;
     };
 };
@@ -7,4 +7,32 @@
 
 &uart20 {
     status = "okay";
+    current-speed = <115200>;
+    /delete-property/ hw-flow-control;
+    zephyr,pm-device-runtime-auto;
+    pinctrl-0 = <&uart20_default>;
+	pinctrl-1 = <&uart20_sleep>;
+	pinctrl-names = "default", "sleep";
 };
+
+// write pinctrl again to remove RTS and CTS pin
+&pinctrl {
+    uart20_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 1, 4)>;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_RX, 1, 5)>;
+			bias-pull-up;
+		};
+    };
+    uart20_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 1, 4)>,
+				<NRF_PSEL(UART_RX, 1, 5)>;
+			low-power-enable;
+            // bias-pull-up;
+		};
+    };
+};
+

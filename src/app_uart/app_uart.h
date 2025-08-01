@@ -25,6 +25,20 @@ int app_uart_rx_cb_register(packets_cb_t cb);
  */
 int app_uart_tx(const uint8_t *byte, size_t len);
 
+/**
+ * @brief disable the UART and put it to sleep
+ * @return 0 on success, negative error code on failure
+ */
+int app_uart_sleep(void);
+
+/**
+ * @brief wake up the UART from sleep
+ * @return 0 on success, negative error code on failure
+ */
+int app_uart_wakeup(void);
+
+
+
 #ifdef __cplusplus
 }
 #endif

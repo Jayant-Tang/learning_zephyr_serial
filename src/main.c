@@ -1,4 +1,5 @@
 #include <zephyr/kernel.h>
+#include <dk_buttons_and_leds.h>
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app, CONFIG_APP_LOG_LEVEL);
 
@@ -83,12 +84,35 @@ static void uart_callback(uint8_t *byte, size_t len)
     }
 }
 
+void button_handler(uint32_t button_state, uint32_t has_changed)
+{
+    uint32_t button = button_state & has_changed;
+    if (DK_BTN1_MSK & button) {
+        LOG_INF("Suspend UART");
+        int err = app_uart_sleep();
+        if (err) {
+            LOG_ERR("Failed to suspend UART: %d", err);
+        }
+    }
+    if (DK_BTN2_MSK & button) {
+        LOG_INF("Resume UART");
+        int err = app_uart_wakeup();
+        if (err) {
+            LOG_ERR("Failed to resume UART: %d", err);
+        }
+    }
+}
+
 int main()
 {
     int err;
     
     LOG_INF("Starting UART application");
-        
+    
+    /* application buttons */
+    dk_buttons_init(button_handler);
+
+    /* UART RX init */
     err = app_uart_rx_cb_register(uart_callback);
     if (err) {
         LOG_ERR("Failed to register RX callback: %d", err);

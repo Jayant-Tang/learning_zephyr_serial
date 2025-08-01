@@ -3,6 +3,7 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/pm/device.h>
 #include <string.h>
 
 #include "app_uart.h"
@@ -14,18 +15,18 @@ LOG_MODULE_REGISTER(app_uart, CONFIG_APP_UART_LOG_LEVEL);
 
 /* serial device */ 
 #if (IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER) && IS_ENABLED(CONFIG_USB_CDC_ACM))
-
+/* USB CDC ACM */
 #include <zephyr/usb/usb_device.h>
 #include <uart_async_adapter.h>
 
 #define USB_UART_INST DT_ALIAS(my_usb_serial)
 static const struct device *uart_dev = DEVICE_DT_GET(USB_UART_INST);
 UART_ASYNC_ADAPTER_INST_DEFINE(async_adapter);
-
 #else 
 
+/* Normal UART */
 #define UART_INST DT_ALIAS(learning_serial)
-static struct device *uart_dev = DEVICE_DT_GET(UART_INST);
+static const struct device *uart_dev = DEVICE_DT_GET(UART_INST);
 
 #endif /* CONFIG_UART_ASYNC_ADAPTER */
 
@@ -44,6 +45,55 @@ K_MSGQ_DEFINE(rx_queue, sizeof(struct uart_data_t), 16, 4);
 
 /* TX semaphores */
 static K_SEM_DEFINE(tx_done, 0, 1);
+
+int app_uart_sleep(void)
+{
+    int err;
+    err = uart_rx_disable(uart_dev);
+    if (err) {
+        LOG_ERR("Failed to disable RX: %d", err);
+        return err;
+    }
+
+#if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)
+    // give some time for UART callback
+    k_sleep(K_MSEC(10)); 
+    err = pm_device_action_run(uart_dev, PM_DEVICE_ACTION_SUSPEND);
+    if (err) {
+        LOG_ERR("Failed to suspend device: %d", err);
+        return err;
+    }
+#endif /* !CONFIG_PM_DEVICE_RUNTIME */ 
+
+    return 0;
+}
+
+int app_uart_wakeup(void)
+{
+    uint8_t *buf;
+    int err;
+
+#if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)
+    err = pm_device_action_run(uart_dev, PM_DEVICE_ACTION_RESUME);
+    if (err) {
+        LOG_ERR("Failed to resume device: %d", err);
+        return err;
+    }
+#endif /* !CONFIG_PM_DEVICE_RUNTIME */
+
+    err = k_mem_slab_alloc(&uart_slab, (void **)&buf, K_NO_WAIT);
+    if (err) {
+        LOG_ERR("Failed to allocate RX buffer: %d", err);
+        return err;
+    }
+
+    err = uart_rx_enable(uart_dev, buf, BUF_SIZE, RX_INACTIVE_TIMEOUT_US);
+    if (err) {
+        LOG_ERR("Failed to enable RX: %d", err);
+        return err;
+    }
+    return 0;
+}
 
 /* async serial callback */
 static void uart_callback(const struct device *dev,
