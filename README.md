@@ -1,44 +1,47 @@
-# Zephyr 异步串口例程
+# Async UART example for Zephyr
 
-这是一个基于 Zephyr RTOS 的串口通信示例工程，实现了串口数据的接收、解析和回环发送功能。
+[中文说明](https://github.com/Jayant-Tang/learning_zephyr_serial/blob/master/README-CN.md)
 
-## 功能概述
+This is a UART communication example project based on Zephyr RTOS, implementing serial data reception, parsing, and loopback transmission functionality.
 
-- 串口异步收发数据
-- CRLF协议解析 (以`\r\n`结尾的数据包)
-- 数据回环 (loopback) 功能
-- 完整的错误处理和内存管理
+## Features
 
-## 硬件支持
+- Asynchronous UART data transmission and reception
+- CRLF protocol parsing (packets ending with `\r\n`)
+- Data loopback functionality
+- Complete error handling and memory management
+- Low power switch
+
+## Hardware Support
 
 - nRF52840DK
 - nRF54L15DK
 
-## 主要文件结构
+## Project Structure
 
 ```
 src/
-├── main.c              # 主应用程序
+├── main.c              # Main application
 ├── app_uart/
-│   ├── app_uart.c      # 串口驱动封装
-│   └── app_uart.h      # 串口API接口
+│   ├── app_uart.c      # UART driver wrapper
+│   └── app_uart.h      # UART API interface
 └── ...
 ```
 
-## 串口使用说明
+## UART Usage Guide
 
-### 1. 包含头文件
+### 1. Include Header Files
 ```c
 #include "app_uart.h"
 ```
 
-### 2. 在main函数中注册数据接收回调函数
+### 2. Register Data Reception Callback in Main Function
 ```c
 static void uart_callback(uint8_t *byte, size_t len)
 {
-    // 处理接收到的数据
+    // Process received data
     for (size_t i = 0; i < len; i++) {
-        bytes_to_packet(byte[i]);  // 协议解析
+        bytes_to_packet(byte[i]);  // Protocol parsing
     }
 }
 
@@ -48,7 +51,7 @@ int main()
     
     LOG_INF("Starting UART application");
     
-    // 注册数据接收回调函数
+    // Register data reception callback function
     err = app_uart_rx_cb_register(uart_callback);
     if (err) {
         LOG_ERR("Failed to register RX callback: %d", err);
@@ -61,7 +64,7 @@ int main()
 }
 ```
 
-### 3. 发送数据
+### 3. Send Data
 ```c
 uint8_t data[] = "Hello World\r\n";
 int err = app_uart_tx(data, sizeof(data));
@@ -70,30 +73,42 @@ if (err) {
 }
 ```
 
-## 协议解析
+## Protocol Packet Parsing
 
-工程实现了简单的CRLF协议：
-- 数据以 `\r\n` 结尾表示一个完整数据包
-- 使用状态机解析字节流
-- 收到完整数据包后自动回环发送
+The project implements a simple CRLF protocol:
+- Data ending with `\r\n` represents a complete packet
+- Uses FSM to parse byte streams
+- Automatically sends loopback after receiving complete packets
 
-## 编译和运行
+## Build and Run
 
-1. 构建工程：
+1. Build the project:
 ```bash
 west build -p -d build -b nrf52840dk/nrf52840
 ```
 
-2. 烧录固件：
+2. Flash firmware:
 ```bash
 west flash
 ```
 
-3. 使用串口工具连接设备，波特率115200
-4. 发送以`\r\n`结尾的数据，观察回环效果
+3. Connect to the device using a serial tool with baud rate 115200
 
-## 博客
+4. Send data ending with `\r\n` and observe the loopback effect
 
-- [Zephyr驱动与设备树实战——串口](https://www.cnblogs.com/jayant97/articles/17828907.html)
+5. UART low-power sleep test:
+   **nRF54L15DK:**
+
+   - Press button0 to enter sleep mode
+   - Press button1 to exit sleep mode
+
+   **nRF52840DK:**
+
+   - Press button1 to enter sleep mode
+   - Press button2 to exit sleep mode
+
+## Blog Reference
+
+- [Zephyr Driver and Device Tree Practice - UART (Chinese)](https://www.cnblogs.com/jayant97/articles/17828907.html)
 
   
