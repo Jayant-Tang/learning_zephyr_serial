@@ -107,6 +107,12 @@ west flash
    - Press button1 to enter sleep mode
    - Press button2 to exit sleep mode
 
+## Important Notes
+
+### Peripheral Pin Cross-Domain Assignment
+
+When GPIO and peripherals on the nRF54L15 are located in different power domains, it is essential to strictly follow the [pin assignment table specified in the manual](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188) for pin allocation. Additionally, during the time when peripherals are in use, it is necessary to enable the [CPU's constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3).
+
 ## Blog Reference
 
 - [Zephyr Driver and Device Tree Practice - UART (Chinese)](https://www.cnblogs.com/jayant97/articles/17828907.html)

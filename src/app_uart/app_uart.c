@@ -6,6 +6,10 @@
 #include <zephyr/pm/device.h>
 #include <string.h>
 
+#if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
+#include <nrfx_power.h>
+#endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
+
 #include "app_uart.h"
 
 #include <zephyr/logging/log.h>
@@ -65,6 +69,10 @@ int app_uart_sleep(void)
     }
 #endif /* !CONFIG_PM_DEVICE_RUNTIME */ 
 
+#if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
+    nrfx_power_constlat_mode_free();
+#endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
+
     return 0;
 }
 
@@ -72,6 +80,10 @@ int app_uart_wakeup(void)
 {
     uint8_t *buf;
     int err;
+
+#if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
+    nrfx_power_constlat_mode_request();
+#endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
 #if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)
     err = pm_device_action_run(uart_dev, PM_DEVICE_ACTION_RESUME);
@@ -293,6 +305,10 @@ static int app_uart_init(void)
     // allocate buffer and start rx
     err = k_mem_slab_alloc(&uart_slab, (void **)&buf, K_NO_WAIT);
 	__ASSERT(err == 0, "Failed to alloc slab");
+
+#if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
+    nrfx_power_constlat_mode_request();
+#endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
     // for the UARTE that have "frame-timeout-supported" property,
     // the RX_INACTIVE_TIMEOUT_US doesn't take effect if it is bigger than max FRAMETIMEOUT of UARTE.

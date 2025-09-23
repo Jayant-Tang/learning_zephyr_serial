@@ -105,6 +105,12 @@ west flash
    - 按button1进入休眠
    - 按button2退出休眠
 
+## 注意事项
+
+### 外设引脚跨域分配
+
+54L15的GPIO和外设位于不同电源域（Power Domain）时，一定要严格按照[手册中的引脚分配表格指定引脚](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188)进行分配。并且，在使用外设的时间内，还需要开启[CPU的constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3)。
+
 ## 博客
 
 - [Zephyr驱动与设备树实战——串口](https://www.cnblogs.com/jayant97/articles/17828907.html)
