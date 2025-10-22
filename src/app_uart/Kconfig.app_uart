@@ -5,6 +5,7 @@ source "subsys/logging/Kconfig.template.log_config"
 config APP_UART_GPIO_CROSS_DOMAIN
     bool "Enable GPIO cross-domain support"
     default n
+    depends on SOC_NRF54L15
     select NRFX_POWER
     help
       Enable this option if the application UART is used on nRF54 series devices
