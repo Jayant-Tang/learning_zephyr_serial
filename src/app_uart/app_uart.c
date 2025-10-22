@@ -37,7 +37,7 @@ static const struct device *uart_dev = DEVICE_DT_GET(UART_INST);
 /* uart rx memory pool for DMA */
 #define BUF_SIZE CONFIG_APP_UART_RX_DMA_BLOCK_SIZE
 #define BUF_NUM CONFIG_APP_UART_RX_DMA_BLOCK_NUMBER
-static K_MEM_SLAB_DEFINE(uart_slab, BUF_SIZE, BUF_NUM, 4);
+K_MEM_SLAB_DEFINE(uart_slab, BUF_SIZE, BUF_NUM, 4);
 
 /* Queues for TX and RX packet */
 struct uart_data_t {
