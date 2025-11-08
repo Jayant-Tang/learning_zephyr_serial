@@ -12,7 +12,7 @@ config APP_UART_GPIO_CROSS_DOMAIN
       and the UART pins are configured to be in a different domain than the UART domain.
 
 config APP_UART_TX_THREAD_PRIORITY
-    int "Thread priority"
+    int "TX Thread priority"
     default 8
     help
       Priority of the application UART thread.
