@@ -1,5 +1,11 @@
 #include <zephyr/kernel.h>
 #include <dk_buttons_and_leds.h>
+
+// nRF91 Series modem library
+#if defined(CONFIG_NRF_MODEM_LIB)
+#include <modem/nrf_modem_lib.h>
+#endif
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app, CONFIG_APP_LOG_LEVEL);
 
@@ -120,6 +126,16 @@ int main()
     }
     
     LOG_INF("UART application initialized successfully");
+
+#if defined(CONFIG_NRF_MODEM_LIB)
+    // for nRF91 Cellular Series, we should init the modem to keep low power,
+    // even if we don't use cellular functions here.
+    nrf_modem_lib_init();
+#endif
+
+    uint8_t start_msg[] = "UART EXAMPLE START\r\n";
+    app_uart_tx(start_msg, sizeof(start_msg) - 1);
+
     k_sleep(K_FOREVER);
     return 0;
 }
