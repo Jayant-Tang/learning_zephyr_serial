@@ -6,10 +6,10 @@ config APP_UART_GPIO_CROSS_DOMAIN
     bool "Enable GPIO cross-domain support"
     default n
     depends on SOC_NRF54L15
-    select NRFX_POWER
+    select NRF_SYS_EVENT
     help
-      Enable this option if the application UART is used on nRF54 series devices
-      and the UART pins are configured to be in a different domain than the UART domain.
+      Enable this option explicitly if use nRF54 UART20/21/22 and GPIO P2, which means gpio cross-domain usage.
+      See: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/app_dev/device_guides/nrf54l/pinmap.html
 
 config APP_UART_TX_THREAD_PRIORITY
     int "TX Thread priority"

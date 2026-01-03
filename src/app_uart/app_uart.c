@@ -7,7 +7,10 @@
 #include <string.h>
 
 #if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
-#include <nrfx_power.h>
+/* For NCS v3.0.x */
+// #include <nrfx_power.h>
+/* For NCS v3.1.x - latest */
+#include <nrf_sys_event.h>
 #endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
 #include "app_uart.h"
@@ -70,7 +73,10 @@ int app_uart_sleep(void)
 #endif /* !CONFIG_PM_DEVICE_RUNTIME */ 
 
 #if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
-    nrfx_power_constlat_mode_free();
+    /* For NCS v3.0.x */
+    // nrfx_power_constlat_mode_free();
+    /* For NCS v3.1.x - latest */
+    nrf_sys_event_release_global_constlat();
 #endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
     return 0;
@@ -82,7 +88,10 @@ int app_uart_wakeup(void)
     int err;
 
 #if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
-    nrfx_power_constlat_mode_request();
+    /* For NCS v3.0.x */
+    // nrfx_power_constlat_mode_request();
+    /* For NCS v3.1.x - latest */
+    nrf_sys_event_request_global_constlat();
 #endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
 #if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)
@@ -307,7 +316,10 @@ static int app_uart_init(void)
 	__ASSERT(err == 0, "Failed to alloc slab");
 
 #if IS_ENABLED(CONFIG_APP_UART_GPIO_CROSS_DOMAIN)
-    nrfx_power_constlat_mode_request();
+    /* For NCS v3.0.x */
+    // nrfx_power_constlat_mode_request();
+    /* For NCS v3.1.x - latest */
+    nrf_sys_event_request_global_constlat();
 #endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
     // for the UARTE that have "frame-timeout-supported" property,
