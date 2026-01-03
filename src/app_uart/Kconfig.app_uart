@@ -5,7 +5,7 @@ source "subsys/logging/Kconfig.template.log_config"
 config APP_UART_GPIO_CROSS_DOMAIN
     bool "Enable GPIO cross-domain support"
     default n
-    depends on SOC_NRF54L15
+    depends on SOC_NRF54L_CPUAPP_COMMON
     select NRF_SYS_EVENT
     help
       Enable this option explicitly if use nRF54 UART20/21/22 and GPIO P2, which means gpio cross-domain usage.
