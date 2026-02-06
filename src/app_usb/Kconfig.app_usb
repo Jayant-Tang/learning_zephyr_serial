@@ -1,0 +1,53 @@
+module = APP_USB
+module-str = app-usb
+source "subsys/logging/Kconfig.template.log_config"
+
+menuconfig APP_USB
+    bool "Enable Application USB CDC ACM"
+    depends on USB_DEVICE_STACK_NEXT
+    select SMF
+    select SMF_ANCESTOR_SUPPORT
+    help
+      Enable this option to use the Application USB CDC ACM module.
+
+if APP_USB
+
+config APP_USB_CDC_ACM_SERIAL_MANUFACTURER_STRING
+	string "USB device manufacturer string descriptor"
+	default "Zephyr Project"
+	help
+	  USB device manufacturer string descriptor.
+
+config APP_USB_CDC_ACM_SERIAL_PRODUCT_STRING
+	string "USB device product string descriptor"
+	default "Async Serial"
+	help
+	  USB device product string descriptor.
+
+config APP_USB_CDC_ACM_SERIAL_VID
+	hex "USB device Vendor ID"
+	default 0x2fe3
+	help
+	  You must use your own VID for samples and applications outside of
+	  Zephyr Project.
+
+config APP_USB_CDC_ACM_SERIAL_PID
+	hex "USB device Product ID"
+	default 0x0004
+	help
+	  You must use your own PID for samples and applications outside of
+	  Zephyr Project.
+
+config APP_USB_CDC_ACM_SERIAL_SELF_POWERED
+	bool "USB device Self-powered attribute"
+	help
+	  Set the Self-powered attribute in the configuration.
+
+config APP_USB_CDC_ACM_SERIAL_MAX_POWER
+	int "USB device bMaxPower value"
+	default 125
+	range 0 250
+	help
+	  bMaxPower value in the configuration in 2 mA units.
+
+endif

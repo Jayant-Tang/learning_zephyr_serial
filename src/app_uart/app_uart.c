@@ -21,9 +21,8 @@ LOG_MODULE_REGISTER(app_uart, CONFIG_APP_UART_LOG_LEVEL);
 #define RX_INACTIVE_TIMEOUT_US 1000000
 
 /* serial device */ 
-#if (IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER) && IS_ENABLED(CONFIG_USB_CDC_ACM))
+#if IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER)
 /* USB CDC ACM */
-#include <zephyr/usb/usb_device.h>
 #include <uart_async_adapter.h>
 
 #define USB_UART_INST DT_ALIAS(my_usb_serial)
@@ -62,7 +61,7 @@ int app_uart_sleep(void)
         return err;
     }
 
-#if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)
+#if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME) && !IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER)
     // give some time for UART callback
     k_sleep(K_MSEC(10)); 
     err = pm_device_action_run(uart_dev, PM_DEVICE_ACTION_SUSPEND);
@@ -94,7 +93,7 @@ int app_uart_wakeup(void)
     nrf_sys_event_request_global_constlat();
 #endif /* CONFIG_APP_UART_GPIO_CROSS_DOMAIN */
 
-#if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)
+#if !IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME) && !IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER)
     err = pm_device_action_run(uart_dev, PM_DEVICE_ACTION_RESUME);
     if (err) {
         LOG_ERR("Failed to resume device: %d", err);
@@ -293,18 +292,14 @@ static int app_uart_init(void)
         return -ENODEV;
     }
 
-#if IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER) && IS_ENABLED(CONFIG_USB_CDC_ACM)
-
-
-    err = usb_enable(NULL);
-    if (err && (err != -EALREADY)) {
-        printk("Failed to enable USB\n");
-        return -ENODEV;
-    }
-
-    /* Implement API adapter */
-    uart_async_adapter_init(async_adapter, uart_dev);
-    uart_dev = async_adapter;
+#if IS_ENABLED(CONFIG_UART_ASYNC_ADAPTER)
+    
+    const struct uart_driver_api *api = (const struct uart_driver_api *)uart_dev->api;
+	if (api->callback_set == NULL) {
+        /* Implement API adapter */
+        uart_async_adapter_init(async_adapter, uart_dev);
+        uart_dev = async_adapter;
+	}
 
 #endif
 

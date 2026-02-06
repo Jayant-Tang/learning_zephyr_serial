@@ -2,7 +2,7 @@
 
 [中文说明](https://github.com/Jayant-Tang/learning_zephyr_serial/blob/master/README-CN.md)
 
-This is a UART communication example project based on Zephyr RTOS, implementing serial data reception, parsing, and loopback transmission functionality.
+This is an async UART communication example project based on Zephyr RTOS, implementing serial data reception, parsing, and loopback transmission functionality.
 
 ## Features
 
@@ -10,12 +10,19 @@ This is a UART communication example project based on Zephyr RTOS, implementing 
 - CRLF protocol parsing (packets ending with `\r\n`)
 - Data loopback functionality
 - Complete error handling and memory management
-- Low power switch
+- RX/TX worker threads with message queues
+- Low power sleep/wakeup via DK buttons
+- Optional USB CDC ACM backend via async adapter
 
 ## Hardware Support
 
+- nRF52DK (nRF52832)
 - nRF52840DK
+- nRF5340DK (CPUAPP / CPUAPP NS)
 - nRF54L15DK
+- nRF54LM20DK (nRF54LM20A)
+- nRF9151DK (NS)
+- nRF9160DK (NS)
 
 ## Project Structure
 
@@ -25,6 +32,10 @@ src/
 ├── app_uart/
 │   ├── app_uart.c      # UART driver wrapper
 │   └── app_uart.h      # UART API interface
+├── app_usb/
+│   ├── app_usb.c       # USB CDC ACM setup
+│   ├── app_usb_callback.c # USB SMF state machine
+│   └── app_usb.h       # USB API interface
 └── ...
 ```
 
@@ -82,6 +93,8 @@ The project implements a simple CRLF protocol:
 
 ## Build and Run
 
+### UART Mode (default)
+
 1. Build the project:
 ```bash
 west build -p -d build -b nrf52840dk/nrf52840
@@ -97,21 +110,49 @@ west flash
 4. Send data ending with `\r\n` and observe the loopback effect
 
 5. UART low-power sleep test:
-   **nRF54L15DK:**
 
-   - Press button0 to enter sleep mode
-   - Press button1 to exit sleep mode
+    - Press button1 to enter sleep mode
+    - Press button2 to exit sleep mode
 
-   **nRF52840DK:**
+### USB CDC ACM Mode (optional)
 
-   - Press button1 to enter sleep mode
-   - Press button2 to exit sleep mode
+Use `prj_usb.conf` + `usb.overlay` to enable USB CDC ACM and the async adapter.
+
+```bash
+west build -p -d build_usb -b nrf52840dk/nrf52840 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+```
+
+Other USB build examples:
+
+```bash
+west build -p -d build_usb_5340 -b nrf5340dk/nrf5340/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+west build -p -d build_usb_54lm20 -b nrf54lm20dk/nrf54lm20a/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+```
+
+### USB State Machine
+
+USB is managed by a simple state machine. CONNECTED is the parent state with child substates, and DISCONNECTED is the low-power state.
+Zephyr SMF runs child state handlers first; if a child returns `SMF_EVENT_HANDLED`, the parent handler will not run for that event.
+
+```mermaid
+stateDiagram-v2
+    DISCONNECTED --> CONNECTED: Plug in
+    CONNECTED --> DISCONNECTED: Unplug
+
+    state CONNECTED {
+        [*] --> CONFIGURED: Enumerated
+        CONFIGURED --> SUSPENDED: Suspend
+        SUSPENDED --> CONFIGURED: Resume
+        CONFIGURED --> [*] : Reset/Deconfig
+        SUSPENDED --> [*] : Reset
+    }
+```
 
 ## Important Notes
 
 ### Peripheral Pin Cross-Domain Assignment
 
-When GPIO and peripherals on the nRF54L15 are located in different power domains, it is essential to strictly follow the [pin assignment table specified in the manual](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188) for pin allocation. Additionally, during the time when peripherals are in use, it is necessary to enable the [CPU's constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3).
+When GPIO and peripherals on the nRF54L15 are located in different power domains, it is essential to strictly follow the [pin assignment table specified in the manual](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188) for pin allocation. Additionally, during the time when peripherals are in use, it is necessary to enable the [CPU's constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3). Enable `CONFIG_APP_UART_GPIO_CROSS_DOMAIN` when using UART20/21/22 with GPIO P2 on nRF54L.
 
 ## Blog Reference
 

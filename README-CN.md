@@ -1,6 +1,6 @@
 # Zephyr 异步串口例程
 
-这是一个基于 Zephyr RTOS 的串口通信示例工程，实现了串口数据的接收、解析和回环发送功能。
+这是一个基于 Zephyr RTOS 的异步串口通信示例工程，实现了串口数据的接收、解析和回环发送功能。
 
 ## 功能概述
 
@@ -8,12 +8,19 @@
 - CRLF协议解析 (以`\r\n`结尾的数据包)
 - 数据回环 (loopback) 功能
 - 完整的错误处理和内存管理
-- 低功耗开关
+- RX/TX 线程与消息队列
+- 低功耗休眠/唤醒（按键）
+- 通过异步串口 API 操作 USB CDC ACM
 
 ## 硬件支持
 
+- nRF52DK (nRF52832)
 - nRF52840DK
+- nRF5340DK (CPUAPP / CPUAPP NS)
 - nRF54L15DK
+- nRF54LM20DK (nRF54LM20A)
+- nRF9151DK (NS)
+- nRF9160DK (NS)
 
 ## 主要文件结构
 
@@ -23,6 +30,10 @@ src/
 ├── app_uart/
 │   ├── app_uart.c      # 串口驱动封装
 │   └── app_uart.h      # 串口API接口
+├── app_usb/
+│   ├── app_usb.c       # USB CDC ACM 初始化
+│   ├── app_usb_callback.c # USB SMF 状态机
+│   └── app_usb.h       # USB API接口
 └── ...
 ```
 
@@ -80,6 +91,8 @@ if (err) {
 
 ## 编译和运行
 
+### UART 模式（默认）
+
 1. 构建工程：
 ```bash
 west build -p -d build -b nrf52840dk/nrf52840
@@ -95,21 +108,49 @@ west flash
 4. 发送以`\r\n`结尾的数据，观察回环效果
 
 5. 串口低功耗休眠测试：
-   **54L15DK：**
 
-   - 按button0进入休眠
-   - 按button1退出休眠
+    - 按 button1 进入休眠
+    - 按 button2 退出休眠
 
-   **52840DK：**
+### USB CDC ACM 模式（可选）
 
-   - 按button1进入休眠
-   - 按button2退出休眠
+使用 `prj_usb.conf` + `usb.overlay` 启用 USB CDC ACM 与异步适配器。
+
+```bash
+west build -p -d build_usb -b nrf52840dk/nrf52840 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+```
+
+其他板子的 USB 编译示例：
+
+```bash
+west build -p -d build_usb_5340 -b nrf5340dk/nrf5340/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+west build -p -d build_usb_54lm20 -b nrf54lm20dk/nrf54lm20a/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+```
+
+### USB 状态机
+
+USB 通过状态机管理。CONNECTED 是父状态并包含子状态，DISCONNECTED 为低功耗状态。
+Zephyr SMF 先执行子状态回调；如果子状态返回 `SMF_EVENT_HANDLED`，父状态回调不会再执行。
+
+```mermaid
+stateDiagram-v2
+    DISCONNECTED --> CONNECTED: 插入
+    CONNECTED --> DISCONNECTED: 拔出
+
+    state CONNECTED {
+        [*] --> CONFIGURED: 枚举完成
+        CONFIGURED --> SUSPENDED: 挂起
+        SUSPENDED --> CONFIGURED: 恢复
+        CONFIGURED --> [*]: 复位/取消配置
+        SUSPENDED --> [*]: 复位
+    }
+```
 
 ## 注意事项
 
 ### 外设引脚跨域分配
 
-54L15的GPIO和外设位于不同电源域（Power Domain）时，一定要严格按照[手册中的引脚分配表格指定引脚](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188)进行分配。并且，在使用外设的时间内，还需要开启[CPU的constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3)。
+54L15的GPIO和外设位于不同电源域（Power Domain）时，一定要严格按照[手册中的引脚分配表格指定引脚](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188)进行分配。并且，在使用外设的时间内，还需要开启[CPU的constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3)。当使用 nRF54L 的 UART20/21/22 并搭配 GPIO P2 时，请使能 `CONFIG_APP_UART_GPIO_CROSS_DOMAIN`。
 
 ## 博客
 

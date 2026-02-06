@@ -10,5 +10,7 @@ module-str = app
 source "subsys/logging/Kconfig.template.log_config"
 endmenu
 
-
+menu "Application USB Device Configuration"
+rsource "src/app_usb/Kconfig.app_usb"
+endmenu
 

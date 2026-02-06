@@ -8,4 +8,5 @@ target_sources(app PRIVATE
     )
 
 add_subdirectory(./src/app_uart)
+add_subdirectory_ifdef(CONFIG_APP_USB ./src/app_usb)
 
