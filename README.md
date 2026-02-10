@@ -17,6 +17,7 @@ This is an async UART communication example project based on Zephyr RTOS, implem
 ## Hardware Support
 
 - nRF52DK (nRF52832)
+- nRF52833DK
 - nRF52840DK
 - nRF5340DK (CPUAPP / CPUAPP NS)
 - nRF54L15DK
@@ -102,7 +103,7 @@ west build -p -d build -b nrf52840dk/nrf52840
 
 2. Flash firmware:
 ```bash
-west flash
+west flash -d build
 ```
 
 3. Connect to the device using a serial tool with baud rate 115200
@@ -116,18 +117,35 @@ west flash
 
 ### USB CDC ACM Mode (optional)
 
-Use `prj_usb.conf` + `usb.overlay` to enable USB CDC ACM and the async adapter.
+1. Build the project:
+   Use `prj_usb.conf` + `usb.overlay` to enable USB CDC ACM and the async adapter.
+   
+   ```bash
+   # nRF52840DK
+   west build -p -d build_usb -b nrf52840dk/nrf52840 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   
+   # nRF52833DK
+   west build -p -d build_usb_52833 -b nrf52833dk/nrf52833 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   
+   # nRF5340DK CPUAPP without TFM
+   west build -p -d build_usb_5340 -b nrf5340dk/nrf5340/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   
+   # nRF54LM20DK nRF54LM20A
+   west build -p -d build_usb_54lm20 -b nrf54lm20dk/nrf54lm20a/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   ```
 
-```bash
-west build -p -d build_usb -b nrf52840dk/nrf52840 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
-```
+2. Flash firmware:
+   ```bash
+   west flash -d build_usb
+   ```
 
-Other USB build examples:
+3. Connect to the device "Async Serial" using a serial tool with any baud rate.
 
-```bash
-west build -p -d build_usb_5340 -b nrf5340dk/nrf5340/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
-west build -p -d build_usb_54lm20 -b nrf54lm20dk/nrf54lm20a/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
-```
+4. Send data ending with `\r\n` and observe the loopback effect.
+
+5. Unplugging USB puts the device into low power mode; plugging it in exits low power mode.
+
+   - Button operations are disabled in USB mode.
 
 ### USB State Machine
 

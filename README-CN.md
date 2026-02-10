@@ -15,6 +15,7 @@
 ## 硬件支持
 
 - nRF52DK (nRF52832)
+- nRF52833DK
 - nRF52840DK
 - nRF5340DK (CPUAPP / CPUAPP NS)
 - nRF54L15DK
@@ -100,7 +101,7 @@ west build -p -d build -b nrf52840dk/nrf52840
 
 2. 烧录固件：
 ```bash
-west flash
+west flash -d build
 ```
 
 3. 使用串口工具连接设备，波特率115200
@@ -114,18 +115,33 @@ west flash
 
 ### USB CDC ACM 模式（可选）
 
-使用 `prj_usb.conf` + `usb.overlay` 启用 USB CDC ACM 与异步适配器。
+1. 构建工程：
+   使用 `prj_usb.conf` + `usb.overlay` 启用 USB CDC ACM 与异步适配器。
+   
+   ```bash
+   # nRF52840DK 
+   west build -p -d build_usb -b nrf52840dk/nrf52840 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   
+   # nRF52833DK
+   west build -p -d build_usb_52833 -b nrf52833dk/nrf52833 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   
+   # nRF5340DK CPUAPP without TFM
+   west build -p -d build_usb_5340 -b nrf5340dk/nrf5340/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+   
+   # nRF54LM20DK nRF54LM20A
+   west build -p -d build_usb_54lm20 -b nrf54lm20dk/nrf54lm20a/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
+2. 烧录固件
+   ```
+   west flash -d build_usb
+   ```
 
-```bash
-west build -p -d build_usb -b nrf52840dk/nrf52840 -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
-```
+3. 使用串口工具连接设备 "Async Serial"，波特率任意
 
-其他板子的 USB 编译示例：
+4. 发送以`\r\n`结尾的数据，观察回环效果
 
-```bash
-west build -p -d build_usb_5340 -b nrf5340dk/nrf5340/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
-west build -p -d build_usb_54lm20 -b nrf54lm20dk/nrf54lm20a/cpuapp -- -DCONF_FILE="prj_usb.conf" -DDTC_OVERLAY_FILE="usb.overlay"
-```
+5. 拔出USB，设备进入低功耗；插入USB，设备退出低功耗。
+
+   - Button 操作在 USB 模式下无效。
 
 ### USB 状态机
 
