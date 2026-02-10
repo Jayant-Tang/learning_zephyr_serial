@@ -150,7 +150,14 @@ stateDiagram-v2
 
 ### 外设引脚跨域分配
 
-54L15的GPIO和外设位于不同电源域（Power Domain）时，一定要严格按照[手册中的引脚分配表格指定引脚](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188)进行分配。并且，在使用外设的时间内，还需要开启[CPU的constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3)。当使用 nRF54L 的 UART20/21/22 并搭配 GPIO P2 时，请使能 `CONFIG_APP_UART_GPIO_CROSS_DOMAIN`。
+nRF54L系列，PERI Power Domain中的外设（如UART20/21/22）想使用GPIO Port 2时，属于跨域使用，需遵循以下2个条件
+
+1. 一定要严格按照[手册中的引脚分配表格指定引脚](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188)进行分配
+2. 并且，在使用外设的时间内，还需要开启[CPU的constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3)：
+   - 开启`CONFIG_NRF_SYS_EVENT=y`
+   - 在外设操作前后调用`nrf_sys_event_release_global_constlat()` 和 `nrf_sys_event_release_global_constlat()`.
+
+文档：https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/app_dev/device_guides/nrf54l/pinmap.html
 
 ## 博客
 

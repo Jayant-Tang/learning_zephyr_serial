@@ -152,7 +152,14 @@ stateDiagram-v2
 
 ### Peripheral Pin Cross-Domain Assignment
 
-When GPIO and peripherals on the nRF54L15 are located in different power domains, it is essential to strictly follow the [pin assignment table specified in the manual](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188) for pin allocation. Additionally, during the time when peripherals are in use, it is necessary to enable the [CPU's constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3). Enable `CONFIG_APP_UART_GPIO_CROSS_DOMAIN` when using UART20/21/22 with GPIO P2 on nRF54L.
+For the nRF54L series, using peripherals in the PERI power domain (such as UART20/21/22) with GPIO Port 2 is a cross-domain use case. Follow these requirements:
+
+1. Strictly follow the [pin assignment table specified in the manual](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/pin.html#d380e188).
+2. While the peripheral is active, enable the [CPU constant latency mode](https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/pmu.html#ariaid-title3):
+    - Enable `CONFIG_NRF_SYS_EVENT=y`.
+    - Call `nrf_sys_event_request_global_constlat()` before using the peripheral and `nrf_sys_event_release_global_constlat()` after finishing.
+
+Reference: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/app_dev/device_guides/nrf54l/pinmap.html
 
 ## Blog Reference
 
